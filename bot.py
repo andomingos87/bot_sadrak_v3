@@ -20,22 +20,22 @@ TELEGRAM_TOKEN = os.getenv('BOT_TELEGRAM_API')
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Usuário {update.effective_user.id} iniciou o bot.")
     await update.message.reply_text(
-        "Bem-vindo! Você pode usar os comandos /entrar ou /sair para continuar."
+        "👋 Olá! Seja bem-vindo ao Assistente de Automação PlugTV.\n\nComigo, você pode automatizar tarefas nos painéis MaxPlayer e QuickPlayer de forma simples e segura.\n\nPara começar, digite /entrar para se autenticar. Se quiser sair a qualquer momento, use /sair.\n\nEm caso de dúvidas, siga as instruções que aparecerão durante o uso!"
     )
 
 async def sair(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Usuário {update.effective_user.id} saiu do fluxo.")
-    await update.message.reply_text("Você saiu. Até logo!")
+    await update.message.reply_text("👋 Você saiu do sistema. Até logo! Se precisar de algo, é só chamar novamente.")
 
 async def receber_mensagem(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Mensagem recebida de {update.effective_user.id}: {update.message.text}")
     await update.message.reply_text(
-        "Para continuar, utilize /entrar ou /sair."
+        "ℹ️ Para continuar, utilize /entrar para acessar o sistema ou /sair para encerrar."
     )
 
 async def entrar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Usuário {update.effective_user.id} iniciou autenticação com /entrar.")
-    await update.message.reply_text("Digite seu nome de usuário:")
+    await update.message.reply_text("🔐 Vamos começar sua autenticação!\n\nPor favor, digite seu nome de usuário:")
     return 1
 
 async def receber_usuario(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -47,7 +47,7 @@ async def receber_usuario(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("Cancelar", callback_data="cancelar_usuario")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(f"Confirme o usuário: {usuario}", reply_markup=reply_markup)
+    await update.message.reply_text(f"👤 Confirme o nome de usuário informado: {usuario}", reply_markup=reply_markup)
     return 2
 
 async def confirmar_usuario(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -56,7 +56,7 @@ async def confirmar_usuario(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "confirmar_usuario":
         usuario = context.user_data.get('usuario', 'N/A')
         logger.info(f"Usuário {update.effective_user.id} confirmou usuário: {usuario}")
-        await query.edit_message_text(f"Usuário confirmado: {usuario}\nAgora digite sua senha:")
+        await query.edit_message_text(f"✅ Usuário confirmado: {usuario}\n\nAgora, digite sua senha para continuar:")
         return 3
     else:
         logger.info(f"Usuário {update.effective_user.id} cancelou autenticação.")
@@ -67,7 +67,7 @@ async def receber_senha(update: Update, context: ContextTypes.DEFAULT_TYPE):
     senha = update.message.text.strip()
     usuario = context.user_data.get('usuario')
     logger.info(f"Usuário {update.effective_user.id} enviou senha para o usuário: {usuario}")
-    await update.message.reply_text("Validando usuário e senha...")
+    await update.message.reply_text("⏳ Validando usuário e senha, aguarde...")
     if usuario is None:
         logger.warning(f"Usuário {update.effective_user.id} tentou autenticar sem usuário definido.")
         await update.message.reply_text("Usuário não definido. Use /entrar novamente.")
@@ -99,11 +99,11 @@ async def receber_senha(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"MENU ATUALIZADO em {agora}\n"
         )
         await update.message.reply_text(mensagem_login)
-        await update.message.reply_text("Escolha o aplicativo:", reply_markup=reply_markup)
+        await update.message.reply_text("🚀 Escolha o aplicativo que deseja automatizar:", reply_markup=reply_markup)
         return 4
     else:
         logger.info(f"Usuário {update.effective_user.id} falhou na autenticação como {usuario}.")
-        await update.message.reply_text("Usuário ou senha incorretos. Tente novamente. Envie seu nome de usuário:")
+        await update.message.reply_text("❌ Usuário ou senha incorretos. Por favor, tente novamente.\n\nDigite seu nome de usuário:")
         return 1
 
 async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -169,15 +169,15 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
             [InlineKeyboardButton("Sair", callback_data="app_sair")],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text("Escolha o aplicativo:", reply_markup=reply_markup)
+        await query.edit_message_text("Escolha o aplicativo: 🤔", reply_markup=reply_markup)
         return 4
     elif escolha == "app_sair":
         logger.info(f"Usuário {update.effective_user.id} saiu após autenticação.")
-        await query.edit_message_text("Você saiu. Até logo!")
+        await query.edit_message_text("👋 Você saiu do sistema. Até logo! Se precisar de algo, é só chamar novamente. 😉")
         return ConversationHandler.END
     else:
         logger.warning(f"Usuário {update.effective_user.id} fez uma escolha inválida: {escolha}")
-        await query.edit_message_text("Escolha inválida. Use /entrar para tentar novamente.")
+        await query.edit_message_text("Escolha inválida. Use /entrar para tentar novamente. 🔄")
         return ConversationHandler.END
 
 
@@ -223,10 +223,12 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     resultado = await iniciar_automacao_maxplayer(usuario_nome, dados)
     if resultado:
         await query.edit_message_text(
-            f"Automação MaxPlayer iniciada para {usuario_nome}!\nUsuário criado: {dados['login']}")
+            f"✅ Usuário criado com sucesso no MaxPlayer para {usuario_nome}!\n\nUsuário: {dados['login']}\n\nSe quiser criar outro usuário ou voltar ao menu, selecione uma opção abaixo.")
     else:
         await query.edit_message_text(
-            f"Falha ao iniciar automação MaxPlayer para {usuario_nome}. Consulte o log para mais detalhes.")
+            f"❌ Não foi possível criar o usuário no MaxPlayer para {usuario_nome}.\n\nPor favor, revise os dados e tente novamente. Se o problema persistir, peça suporte ao administrador.")
+    keyboard = [[InlineKeyboardButton("🔙 Voltar ao menu", callback_data="voltar_menu")]]
+    await query.message.reply_text("O que deseja fazer agora?", reply_markup=InlineKeyboardMarkup(keyboard))
     return 4
 
 # --- QUICKPLAYER HANDLERS ---
@@ -236,7 +238,15 @@ async def quickplayer_iniciar(update: Update, context: ContextTypes.DEFAULT_TYPE
     context.user_data['quickplayer'] = {}
     keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
     await update.message.reply_text(
-        "Você está na automação do QuickPlayer.\n\nDigite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):",
+        "Você está na automação do QuickPlayer. Aqui, você poderá configurar o QuickPlayer para receber uma lista de canais de TV.",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    await update.message.reply_text(
+        "Para começar, precisamos do endereço MAC do seu dispositivo. O endereço MAC é uma sequência de 6 pares de números e letras, separados por dois-pontos, como XX:XX:XX:XX:XX:XX.",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    await update.message.reply_text(
+        "Por favor, digite o endereço MAC do seu dispositivo:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
     return 21
@@ -244,12 +254,16 @@ async def quickplayer_iniciar(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def quickplayer_receber_mac(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mac = update.message.text.strip()
     if not mac or len(mac) != 17:
-        await update.message.reply_text("MAC inválido. Digite no formato XX:XX:XX:XX:XX:XX:")
+        await update.message.reply_text("Endereço MAC inválido. Por favor, digite o endereço MAC no formato XX:XX:XX:XX:XX:XX:")
         return 21
     context.user_data['quickplayer']['mac'] = mac
     keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
     await update.message.reply_text(
-        f"MAC registrado: {mac}\n\nAgora, envie o link M3U:",
+        f"Endereço MAC registrado: {mac}. Agora, precisamos da URL da lista de canais de TV que você deseja configurar.",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    await update.message.reply_text(
+        "A URL da lista de canais de TV deve começar com http:// ou https://. Por favor, digite a URL da lista de canais de TV:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
     return 22
@@ -257,12 +271,13 @@ async def quickplayer_receber_mac(update: Update, context: ContextTypes.DEFAULT_
 async def quickplayer_receber_m3u(update: Update, context: ContextTypes.DEFAULT_TYPE):
     m3u = update.message.text.strip()
     if not m3u.startswith("http"):
-        await update.message.reply_text("Link M3U inválido. Envie uma URL começando com http:// ou https://")
+        await update.message.reply_text("URL da lista de canais de TV inválida. Por favor, digite a URL da lista de canais de TV começando com http:// ou https://")
         return 22
     context.user_data['quickplayer']['m3u'] = m3u
     dados = context.user_data['quickplayer']
     resumo = (
-        f"Confirme os dados:\nMAC: {dados['mac']}\nM3U: {dados['m3u']}\n\nClique em Confirmar para iniciar a automação ou Voltar para corrigir."
+        f"Confirme os dados:\nEndereço MAC: {dados['mac']}\nURL da lista de canais de TV: {dados['m3u']}\n\n"
+        "Se os dados estiverem corretos, clique em Confirmar para iniciar a configuração do QuickPlayer."
     )
     keyboard = [
         [InlineKeyboardButton("Confirmar", callback_data="quickplayer_confirmar")],
@@ -276,30 +291,27 @@ async def quickplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
     dados = context.user_data.get('quickplayer', {})
     usuario_nome = context.user_data.get('usuario', 'N/A')
-    logger.info(f"Usuário {update.effective_user.id} confirmou dados para automação QuickPlayer: {dados}")
+    logger.info(f"Usuário {update.effective_user.id} confirmou dados para configuração do QuickPlayer: {dados}")
     resultado = await iniciar_automacao_quickplayer(dados['mac'], dados['m3u'])
     if resultado:
         await query.edit_message_text(
-            f"Automação QuickPlayer iniciada para {usuario_nome}! Playlist enviada para o MAC: {dados['mac']}")
+            f"✅ Playlist cadastrada com sucesso no QuickPlayer!\n\nA lista foi enviada para o MAC: {dados['mac']}\n\nSe quiser cadastrar outra lista ou voltar ao menu, escolha uma opção abaixo."
+        )
     else:
         await query.edit_message_text(
-            f"Falha ao iniciar automação QuickPlayer para {usuario_nome}. Consulte o log para mais detalhes.")
-    # Oferece opção de voltar ao menu
-    keyboard = [[InlineKeyboardButton("Voltar ao menu", callback_data="voltar_menu")]]
+            f"❌ Não foi possível cadastrar a playlist para o MAC: {dados['mac']}.\n\nRevise os dados e tente novamente. Se o erro persistir, solicite suporte ao administrador."
+        )
+    keyboard = [[InlineKeyboardButton("🔙 Voltar ao menu", callback_data="voltar_menu")]]
     await query.message.reply_text("O que deseja fazer agora?", reply_markup=InlineKeyboardMarkup(keyboard))
     return 4
 
-# --- FIM QUICKPLAYER HANDLERS ---
-
 def main():
     # Deixar logs HTTP menos verbosos
-    import logging
     logging.getLogger('httpx').setLevel(logging.WARNING)
     logging.getLogger('telegram.vendor.ptb_urllib3.urllib3.connectionpool').setLevel(logging.WARNING)
     logging.getLogger('telegram.ext._applicationlogger').setLevel(logging.WARNING)
     if not TELEGRAM_TOKEN:
         logger.error("Token do Telegram não encontrado no .env.")
-        return
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("entrar", entrar)],
