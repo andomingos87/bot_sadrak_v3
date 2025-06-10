@@ -213,7 +213,7 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     dados = context.user_data.get('maxplayer', {})
     usuario_nome = context.user_data.get('usuario', 'N/A')
     logger.info(f"Usuário {update.effective_user.id} confirmou dados para automação MaxPlayer: {dados}")
-    resultado = iniciar_automacao_maxplayer(usuario_nome, dados)
+    resultado = await iniciar_automacao_maxplayer(usuario_nome, dados)
     if resultado:
         await query.edit_message_text(
             f"Automação MaxPlayer iniciada para {usuario_nome}!\nUsuário criado: {dados['login']}\n(Em breve integração completa com o painel MaxPlayer.)")
@@ -223,6 +223,11 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     return 4
 
 def main():
+    # Deixar logs HTTP menos verbosos
+    import logging
+    logging.getLogger('httpx').setLevel(logging.WARNING)
+    logging.getLogger('telegram.vendor.ptb_urllib3.urllib3.connectionpool').setLevel(logging.WARNING)
+    logging.getLogger('telegram.ext._applicationlogger').setLevel(logging.WARNING)
     if not TELEGRAM_TOKEN:
         logger.error("Token do Telegram não encontrado no .env.")
         return
