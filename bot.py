@@ -132,17 +132,12 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         await query.edit_message_text(mensagem, reply_markup=reply_markup)
         return 4
     elif escolha == "maxplayer_iniciar":
-        from bot_max import iniciar_automacao_maxplayer
-        usuario_nome = context.user_data.get('usuario', 'N/A')
-        logger.info(f"Usuário {update.effective_user.id} iniciou automação MaxPlayer para o usuário: {usuario_nome}.")
-        resultado = iniciar_automacao_maxplayer(usuario_nome)
-        if resultado:
-            await query.edit_message_text(
-                f"Automação MaxPlayer iniciada para {usuario_nome}!\n\n(Em breve integração completa com o painel MaxPlayer.)")
-        else:
-            await query.edit_message_text(
-                f"Falha ao iniciar automação MaxPlayer para {usuario_nome}. Consulte o log para mais detalhes.")
-        return 4
+        logger.info(f"Usuário {update.effective_user.id} iniciou fluxo de coleta de dados para automação MaxPlayer.")
+        context.user_data['maxplayer'] = {}
+        await query.edit_message_text(
+            "Vamos criar um novo usuário no painel MaxPlayer.\n\nDigite o LOGIN do novo usuário:")
+        return 11
+
     elif escolha == "app_quickplayer":
         app_nome = "QuickPlayer"
         logger.info(f"Usuário {update.effective_user.id} escolheu {app_nome}.")
@@ -178,6 +173,55 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         await query.edit_message_text("Escolha inválida. Use /entrar para tentar novamente.")
         return ConversationHandler.END
 
+
+async def maxplayer_receber_login(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    login = update.message.text.strip()
+    if not login:
+        await update.message.reply_text("Login inválido. Por favor, digite o login do novo usuário:")
+        return 11
+    context.user_data['maxplayer']['login'] = login
+    await update.message.reply_text(
+        f"Login registrado: {login}\n\nAgora, digite a SENHA do novo usuário:")
+    return 12
+
+async def maxplayer_receber_senha(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    senha = update.message.text.strip()
+    if not senha:
+        await update.message.reply_text("Senha inválida. Por favor, digite a senha do novo usuário:")
+        return 12
+    context.user_data['maxplayer']['senha'] = senha
+    # Confirmação dos dados antes de chamar automação
+    dados = context.user_data['maxplayer']
+    resumo = (
+        f"Confirme os dados:\n"
+        f"Login: {dados['login']}\n"
+        f"Senha: {'*' * len(dados['senha'])}\n\n"
+        "Clique em Confirmar para iniciar a automação ou Voltar para corrigir."
+    )
+    keyboard = [
+        [InlineKeyboardButton("Confirmar", callback_data="maxplayer_confirmar")],
+        [InlineKeyboardButton("Voltar", callback_data="maxplayer_iniciar")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(resumo, reply_markup=reply_markup)
+    return 13
+
+async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from bot_max import iniciar_automacao_maxplayer
+    query = update.callback_query
+    await query.answer()
+    dados = context.user_data.get('maxplayer', {})
+    usuario_nome = context.user_data.get('usuario', 'N/A')
+    logger.info(f"Usuário {update.effective_user.id} confirmou dados para automação MaxPlayer: {dados}")
+    resultado = iniciar_automacao_maxplayer(usuario_nome, dados)
+    if resultado:
+        await query.edit_message_text(
+            f"Automação MaxPlayer iniciada para {usuario_nome}!\nUsuário criado: {dados['login']}\n(Em breve integração completa com o painel MaxPlayer.)")
+    else:
+        await query.edit_message_text(
+            f"Falha ao iniciar automação MaxPlayer para {usuario_nome}. Consulte o log para mais detalhes.")
+    return 4
+
 def main():
     if not TELEGRAM_TOKEN:
         logger.error("Token do Telegram não encontrado no .env.")
@@ -190,6 +234,9 @@ def main():
             2: [CallbackQueryHandler(confirmar_usuario, pattern="^(confirmar_usuario|cancelar_usuario)$")],
             3: [MessageHandler(filters.TEXT & ~filters.COMMAND, receber_senha)],
             4: [CallbackQueryHandler(escolher_aplicativo, pattern="^(app_maxplayer|app_quickplayer|app_sair|voltar_menu|maxplayer_iniciar)$")],
+            11: [MessageHandler(filters.TEXT & ~filters.COMMAND, maxplayer_receber_login)],
+            12: [MessageHandler(filters.TEXT & ~filters.COMMAND, maxplayer_receber_senha)],
+            13: [CallbackQueryHandler(maxplayer_confirmar, pattern="^(maxplayer_confirmar|maxplayer_iniciar)$")],
         },
         fallbacks=[CommandHandler("sair", sair)],
         allow_reentry=True
