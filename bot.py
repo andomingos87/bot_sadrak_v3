@@ -140,19 +140,18 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         return 11
 
     elif escolha == "app_quickplayer":
-        app_nome = "QuickPlayer"
-        logger.info(f"Usuário {update.effective_user.id} escolheu {app_nome}.")
+        logger.info(f"Usuário {update.effective_user.id} escolheu QuickPlayer.")
         # Mensagem de boas-vindas
         keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         mensagem = (
-            f"🚀 Você escolheu o app {app_nome}.\n\n"
+            "🚀 Você escolheu o app QuickPlayer.\n\n"
         )
         await query.edit_message_text(mensagem, reply_markup=reply_markup)
         # Já solicita o MAC Address em seguida
         await query.message.reply_text(
             "Digite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):",
-            reply_markup=reply_markup
+            #reply_markup=reply_markup
         )
         context.user_data['quickplayer'] = {}
         return 21
@@ -262,12 +261,12 @@ async def quickplayer_receber_mac(update: Update, context: ContextTypes.DEFAULT_
         return 21
     context.user_data['quickplayer']['mac'] = mac
     keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
+    # await update.message.reply_text(
+    #     f"Endereço MAC registrado: {mac}. Agora, precisamos da URL da lista de canais de TV que você deseja configurar.",
+    #     reply_markup=InlineKeyboardMarkup(keyboard)
+    # )
     await update.message.reply_text(
-        f"Endereço MAC registrado: {mac}. Agora, precisamos da URL da lista de canais de TV que você deseja configurar.",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-    await update.message.reply_text(
-        "A URL da lista de canais de TV deve começar com http:// ou https://. Por favor, digite a URL da lista de canais de TV:",
+        "Agora envie o link M3U",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
     return 22
