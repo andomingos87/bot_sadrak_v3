@@ -218,6 +218,7 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     agora = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     usuario_nome = context.user_data.get('usuario', 'N/A')
     logger.info(f"Usuário {update.effective_user.id} confirmou dados para automação MaxPlayer: {dados}")
+    await query.edit_message_text("⏳ Executando automação do MaxPlayer. Por favor, aguarde...")
     resultado = await iniciar_automacao_maxplayer(usuario_nome, dados)
     if resultado:
         await query.edit_message_text(
@@ -290,6 +291,7 @@ async def quickplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TY
     dados = context.user_data.get('quickplayer', {})
     usuario_nome = context.user_data.get('usuario', 'N/A')
     logger.info(f"Usuário {update.effective_user.id} confirmou dados para configuração do QuickPlayer: {dados}")
+    await query.edit_message_text("⏳ Executando automação do QuickPlayer. Por favor, aguarde...")
     resultado = await iniciar_automacao_quickplayer(dados['mac'], dados['m3u'])
     agora = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     if resultado:

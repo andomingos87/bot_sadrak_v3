@@ -1,4 +1,7 @@
-- Criar mensagens de espera para instruir o usuario e ele saber que ta acontecendo alguma coisa
-- Quando voltar, não editar mensagens, criar novas
-- Melhorar fluxo do Max Player, está sem botão de voltar, tirar o botão de iniciar automação, está bem ruim.
-- Depois que digito /sair o bnot mostra a mensgem de saída normal, mas se eu digito qualquer coisa ele recebe como login e pede uma senha.![alt text]({BF8A4FDF-51F0-439A-B31B-821E4675D81D}.png)
+[x] Criar mensagens de espera para instruir o usuario e ele saber que ta acontecendo alguma coisa
+
+[ ] Quando voltar, não editar mensagens, criar novas
+
+[ ] Melhorar fluxo do Max Player, está sem botão de voltar, tirar o botão de iniciar automação, está bem ruim.
+
+[ ] Depois que digito /sair o bnot mostra a mensgem de saída normal, mas se eu digito qualquer coisa ele recebe como login e pede uma senha.![alt text]({BF8A4FDF-51F0-439A-B31B-821E4675D81D}.png)
