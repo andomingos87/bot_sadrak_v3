@@ -1,0 +1,14 @@
+# Arquivos do Python
+__pycache__
+service_account.json
+.venv
+
+# Arquivos de log
+*.log
+
+# Arquivos de configuração
+*.env
+
+# Instruções e planejamento
+PLANEJAMENTO_BOT_TELEGRAM.md
+instrucoes.md
