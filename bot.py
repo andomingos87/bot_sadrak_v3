@@ -90,14 +90,14 @@ async def receber_senha(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [
                 InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer"),
                 InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer"),
-                InlineKeyboardButton("Sair", callback_data="app_sair")
+                # InlineKeyboardButton("Sair", callback_data="app_sair")
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         usuario_nome = usuario
         agora = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
         mensagem_login = (
-            f"Autenticação realizada com sucesso!\n\n"
+            f"✅ Autenticação realizada com sucesso!\n\n"
             f"Revenda: {usuario_nome}!\n\n"
             "Se você está tendo problemas, mande /sair e faça /entrar novamente!\n"
             "Não envie mensagens com o menu aberto.\n\n"
@@ -160,16 +160,11 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         keyboard = [
             [
                 InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer"),
-                InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer"),
-                InlineKeyboardButton("Sair", callback_data="app_sair")
+                InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer")
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(f"""Revenda: {usuario_nome}\n\n
-Se você está tendo problemas, mande /sair e faça /entrar novamente!\n
-Não envie mensagens com o menu aberto.\n\n
-Escolha o aplicativo: 🤔
-""", reply_markup=reply_markup)
+        await query.edit_message_text("Escolha o aplicativo: 🤔", reply_markup=reply_markup)
         return 4
     elif escolha == "app_sair":
         logger.info(f"Usuário {update.effective_user.id} saiu após autenticação.")
