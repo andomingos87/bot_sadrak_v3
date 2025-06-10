@@ -36,32 +36,53 @@ async def iniciar_automacao_quickplayer(mac, m3u_url):
         return False
     # Adaptar início da URL recebida
     url_alterada = re.sub(r"^https?://[^/]+", url_base, m3u_url)
+    # Garantir que url_alterada começa com http:// ou https://
+    if not url_alterada.startswith(('http://', 'https://')):
+        url_alterada = 'http://' + url_alterada.lstrip('/')
+    epg_url = f"{url_base}/epg"
+    if not epg_url.startswith(('http://', 'https://')):
+        epg_url = 'http://' + epg_url.lstrip('/')
     logging.info(f"[QuickPlayer] URL M3U adaptada: {url_alterada}")
     browser = None
     try:
+        import os
+        from datetime import datetime
+        videos_dir = os.path.join(os.path.dirname(__file__), 'videos')
+        os.makedirs(videos_dir, exist_ok=True)
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
+            # headless=False para depuração visual
+            browser = await p.chromium.launch(headless=False)
+            # Nome do vídeo inclui MAC e timestamp
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            video_name = f'quickplayer_{mac.replace(":","")}_{timestamp}'
+            context = await browser.new_context(record_video_dir=videos_dir)
+            page = await context.new_page()
             logging.info("[QuickPlayer] Acessando painel QuickPlayer...")
             await page.goto("https://quickplayer.app/#/upload-playlist", timeout=40000)
+            await asyncio.sleep(1)
             # Preenche MAC
             await page.fill('#mac', mac)
             logging.info(f"[QuickPlayer] MAC preenchido: {mac}")
+            await asyncio.sleep(1)
             # Aguarda mensagem de validação
             await page.wait_for_selector('span.message_success-text__NtfBt', timeout=15000)
             logging.info("[QuickPlayer] MAC validado com sucesso.")
+            await asyncio.sleep(1)
 
             # Preenche Playlist Name
             await page.fill('#upload-playlist-by-url_name', "PLUGTV")
             logging.info("[QuickPlayer] Playlist Name preenchido: PLUGTV")
+            await asyncio.sleep(1)
 
             # Preenche Playlist URL
             await page.fill('#upload-playlist-by-url_url', url_alterada)
             logging.info(f"[QuickPlayer] Playlist URL preenchida: {url_alterada}")
+            await asyncio.sleep(1)
 
             # Preenche Playlist EPG URL
             await page.fill('#upload-playlist-by-url_epg_url', f"{url_base}/epg")
             logging.info(f"[QuickPlayer] Playlist EPG URL preenchida: {url_base}/epg")
+            await asyncio.sleep(1)
 
             # Clica no botão Upload
             logging.info("[QuickPlayer] Clicando no botão Upload...")
