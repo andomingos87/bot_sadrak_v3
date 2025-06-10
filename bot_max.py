@@ -44,16 +44,19 @@ async def iniciar_automacao_maxplayer(usuario, dados):
             logging.info("[MaxPlayer] Clicou em Add New User")
 
             # Seleciona domínio cr61.net
-            await page.select_option('select#name', value="1739318193890969526")
+            logging.info("[MaxPlayer] Selecionando domínio cr61.net...")
+            await page.select_option('#name', value="1739318193890969526")
             logging.info("[MaxPlayer] Domínio cr61.net selecionado")
 
             # Preenche usuário e senha recebidos do Telegram
-            await page.fill('input[name="iptv_user"]', dados['login'])
-            await page.fill('input[name="iptv_pass"]', dados['senha'])
+            logging.info("[MaxPlayer] Preenchendo usuário e senha...")
+            await page.fill('#iptv_user', dados['login'])
+            await page.fill('#iptv_pass', dados['senha'])
             logging.info(f"[MaxPlayer] Dados do novo usuário preenchidos: login={dados['login']}")
 
             # Clica em Create
-            await page.click('button.btn-primary:has-text("Create")')
+            logging.info("[MaxPlayer] Clicando no botão Create...")
+            await page.click('.btn.btn-primary:has-text("Create")')
             logging.info("[MaxPlayer] Botão Create clicado. Aguardando finalização...")
 
             # Aguarda finalização
