@@ -4,6 +4,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 import os
 from dotenv import load_dotenv
 from bot_auth import autenticar_usuario
+from datetime import datetime
 
 # Carregar variáveis do .env
 load_dotenv()
@@ -43,8 +44,10 @@ async def receber_usuario(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['usuario'] = usuario
     logger.info(f"Usuário {update.effective_user.id} enviou nome de usuário: {usuario}")
     keyboard = [
-        [InlineKeyboardButton("Confirmar", callback_data="confirmar_usuario")],
-        [InlineKeyboardButton("Cancelar", callback_data="cancelar_usuario")]
+        [
+            InlineKeyboardButton("Confirmar", callback_data="confirmar_usuario"),
+            InlineKeyboardButton("Cancelar", callback_data="cancelar_usuario")
+        ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(f"👤 Confirme o nome de usuário informado: {usuario}", reply_markup=reply_markup)
@@ -76,17 +79,19 @@ async def receber_senha(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         autenticado = autenticar_usuario(usuario, senha)
     except Exception as e:
-        logger.error(f"Erro ao autenticar usuário no Google Sheets: {e}")
+        logger.error(f"Erro ao autenticar usuário: {e}")
         await update.message.reply_text("Erro interno ao acessar autenticação. Tente novamente mais tarde.")
         return ConversationHandler.END
     if autenticado:
         logger.info(f"Usuário {update.effective_user.id} autenticado com sucesso como {usuario}.")
-        from datetime import datetime
+        
         logger.info(f"Usuário {update.effective_user.id} autenticado. Exibindo menu de escolha de aplicativo.")
         keyboard = [
-            [InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer")],
-            [InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer")],
-            [InlineKeyboardButton("Sair", callback_data="app_sair")],
+            [
+                InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer"),
+                InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer"),
+                InlineKeyboardButton("Sair", callback_data="app_sair")
+            ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         usuario_nome = usuario
@@ -116,18 +121,14 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
     if escolha == "app_maxplayer":
         logger.info(f"Usuário {update.effective_user.id} entrou na automação do MaxPlayer.")
         keyboard = [
-            [InlineKeyboardButton("Iniciar Automação", callback_data="maxplayer_iniciar")],
-            [InlineKeyboardButton("Voltar ao menu de aplicativos", callback_data="voltar_menu")]
+            [
+                InlineKeyboardButton("Iniciar Automação", callback_data="maxplayer_iniciar"),
+                InlineKeyboardButton("Voltar ao menu de aplicativos", callback_data="voltar_menu")
+            ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         mensagem = (
-            "Você está agora na automação do MaxPlayer!\n\n"
-            "Aqui você poderá criar usuários no painel MaxPlayer de forma automatizada.\n\n"
-            "Escolha uma opção abaixo para iniciar ou voltar ao menu.\n\n"
-            f"Revenda: {usuario_nome}!\n\n"
-            "Se você está tendo problemas, mande /sair e faça /entrar novamente!\n"
-            "Não envie mensagens com o menu aberto.\n\n"
-            f"MENU ATUALIZADO em {agora}"
+            f"🚀 Você escolheu o app MaxPlayer."
         )
         await query.edit_message_text(mensagem, reply_markup=reply_markup)
         return 4
@@ -135,7 +136,7 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.info(f"Usuário {update.effective_user.id} iniciou fluxo de coleta de dados para automação MaxPlayer.")
         context.user_data['maxplayer'] = {}
         await query.edit_message_text(
-            "Vamos criar um novo usuário no painel MaxPlayer.\n\nDigite o LOGIN do novo usuário:")
+            "Por favor, envie o nome do Usuario que deseja criar.")
         return 11
 
     elif escolha == "app_quickplayer":
@@ -145,18 +146,12 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         mensagem = (
-            f"Você escolheu {app_nome}!\n\n"
-            f"Se quiser mudar de aplicativo, clique em Voltar.\n"
-            "Para continuar, siga as instruções abaixo.\n\n"
-            f"Revenda: {usuario_nome}!\n\n"
-            "Se você está tendo problemas, mande /sair e faça /entrar novamente!\n"
-            "Não envie mensagens com o menu aberto.\n\n"
-            f"MENU ATUALIZADO em {agora}"
+            f"🚀 Você escolheu o app {app_nome}.\n\n"
         )
         await query.edit_message_text(mensagem, reply_markup=reply_markup)
         # Já solicita o MAC Address em seguida
         await query.message.reply_text(
-            "Você está na automação do QuickPlayer.\n\nDigite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):",
+            "Digite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):",
             reply_markup=reply_markup
         )
         context.user_data['quickplayer'] = {}
@@ -164,12 +159,18 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
     elif escolha == "voltar_menu":
         logger.info(f"Usuário {update.effective_user.id} voltou ao menu de escolha de aplicativo.")
         keyboard = [
-            [InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer")],
-            [InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer")],
-            [InlineKeyboardButton("Sair", callback_data="app_sair")],
+            [
+                InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer"),
+                InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer"),
+                InlineKeyboardButton("Sair", callback_data="app_sair")
+            ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text("Escolha o aplicativo: 🤔", reply_markup=reply_markup)
+        await query.edit_message_text(f"""Revenda: {usuario_nome}\n\n
+Se você está tendo problemas, mande /sair e faça /entrar novamente!\n
+Não envie mensagens com o menu aberto.\n\n
+Escolha o aplicativo: 🤔
+""", reply_markup=reply_markup)
         return 4
     elif escolha == "app_sair":
         logger.info(f"Usuário {update.effective_user.id} saiu após autenticação.")
@@ -188,7 +189,7 @@ async def maxplayer_receber_login(update: Update, context: ContextTypes.DEFAULT_
         return 11
     context.user_data['maxplayer']['login'] = login
     await update.message.reply_text(
-        f"Login registrado: {login}\n\nAgora, digite a SENHA do novo usuário:")
+        f"Login registrado: {login}\n\nAgora envie a senha.")
     return 12
 
 async def maxplayer_receber_senha(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -206,8 +207,10 @@ async def maxplayer_receber_senha(update: Update, context: ContextTypes.DEFAULT_
         "Clique em Confirmar para iniciar a automação ou Voltar para corrigir."
     )
     keyboard = [
-        [InlineKeyboardButton("Confirmar", callback_data="maxplayer_confirmar")],
-        [InlineKeyboardButton("Voltar", callback_data="maxplayer_iniciar")]
+        [
+            InlineKeyboardButton("Confirmar", callback_data="maxplayer_confirmar"),
+            InlineKeyboardButton("Voltar", callback_data="maxplayer_iniciar")
+        ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(resumo, reply_markup=reply_markup)
@@ -218,12 +221,13 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     await query.answer()
     dados = context.user_data.get('maxplayer', {})
+    agora = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     usuario_nome = context.user_data.get('usuario', 'N/A')
     logger.info(f"Usuário {update.effective_user.id} confirmou dados para automação MaxPlayer: {dados}")
     resultado = await iniciar_automacao_maxplayer(usuario_nome, dados)
     if resultado:
         await query.edit_message_text(
-            f"✅ Usuário criado com sucesso no MaxPlayer para {usuario_nome}!\n\nUsuário: {dados['login']}\n\nSe quiser criar outro usuário ou voltar ao menu, selecione uma opção abaixo.")
+            f"✅ Usuário criado com sucesso!\n\nRevenda: {usuario_nome}!\n\n Escolha o aplicativo que deseja acessar. Se você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\n MENU ATUALIZADO em {agora}")
     else:
         await query.edit_message_text(
             f"❌ Não foi possível criar o usuário no MaxPlayer para {usuario_nome}.\n\nPor favor, revise os dados e tente novamente. Se o problema persistir, peça suporte ao administrador.")
@@ -293,9 +297,10 @@ async def quickplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TY
     usuario_nome = context.user_data.get('usuario', 'N/A')
     logger.info(f"Usuário {update.effective_user.id} confirmou dados para configuração do QuickPlayer: {dados}")
     resultado = await iniciar_automacao_quickplayer(dados['mac'], dados['m3u'])
+    agora = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     if resultado:
         await query.edit_message_text(
-            f"✅ Playlist cadastrada com sucesso no QuickPlayer!\n\nA lista foi enviada para o MAC: {dados['mac']}\n\nSe quiser cadastrar outra lista ou voltar ao menu, escolha uma opção abaixo."
+            f"✅ Lista enviada com sucesso!\n\n Revenda: {usuario_nome}!\n\nEscolha o aplicativo que deseja acessar.\nSe você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\nMENU ATUALIZADO em {agora}"
         )
     else:
         await query.edit_message_text(
