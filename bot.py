@@ -141,6 +141,7 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
     elif escolha == "app_quickplayer":
         app_nome = "QuickPlayer"
         logger.info(f"Usuário {update.effective_user.id} escolheu {app_nome}.")
+        # Mensagem de boas-vindas
         keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         mensagem = (
@@ -153,7 +154,13 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
             f"MENU ATUALIZADO em {agora}"
         )
         await query.edit_message_text(mensagem, reply_markup=reply_markup)
-        return 4
+        # Já solicita o MAC Address em seguida
+        await query.message.reply_text(
+            "Você está na automação do QuickPlayer.\n\nDigite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):",
+            reply_markup=reply_markup
+        )
+        context.user_data['quickplayer'] = {}
+        return 21
     elif escolha == "voltar_menu":
         logger.info(f"Usuário {update.effective_user.id} voltou ao menu de escolha de aplicativo.")
         keyboard = [
@@ -216,11 +223,73 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     resultado = await iniciar_automacao_maxplayer(usuario_nome, dados)
     if resultado:
         await query.edit_message_text(
-            f"Automação MaxPlayer iniciada para {usuario_nome}!\nUsuário criado: {dados['login']}\n(Em breve integração completa com o painel MaxPlayer.)")
+            f"Automação MaxPlayer iniciada para {usuario_nome}!\nUsuário criado: {dados['login']}")
     else:
         await query.edit_message_text(
             f"Falha ao iniciar automação MaxPlayer para {usuario_nome}. Consulte o log para mais detalhes.")
     return 4
+
+# --- QUICKPLAYER HANDLERS ---
+from bot_quick import iniciar_automacao_quickplayer
+
+async def quickplayer_iniciar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['quickplayer'] = {}
+    keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
+    await update.message.reply_text(
+        "Você está na automação do QuickPlayer.\n\nDigite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    return 21
+
+async def quickplayer_receber_mac(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    mac = update.message.text.strip()
+    if not mac or len(mac) != 17:
+        await update.message.reply_text("MAC inválido. Digite no formato XX:XX:XX:XX:XX:XX:")
+        return 21
+    context.user_data['quickplayer']['mac'] = mac
+    keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
+    await update.message.reply_text(
+        f"MAC registrado: {mac}\n\nAgora, envie o link M3U:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    return 22
+
+async def quickplayer_receber_m3u(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    m3u = update.message.text.strip()
+    if not m3u.startswith("http"):
+        await update.message.reply_text("Link M3U inválido. Envie uma URL começando com http:// ou https://")
+        return 22
+    context.user_data['quickplayer']['m3u'] = m3u
+    dados = context.user_data['quickplayer']
+    resumo = (
+        f"Confirme os dados:\nMAC: {dados['mac']}\nM3U: {dados['m3u']}\n\nClique em Confirmar para iniciar a automação ou Voltar para corrigir."
+    )
+    keyboard = [
+        [InlineKeyboardButton("Confirmar", callback_data="quickplayer_confirmar")],
+        [InlineKeyboardButton("Voltar", callback_data="quickplayer_iniciar")]
+    ]
+    await update.message.reply_text(resumo, reply_markup=InlineKeyboardMarkup(keyboard))
+    return 23
+
+async def quickplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    dados = context.user_data.get('quickplayer', {})
+    usuario_nome = context.user_data.get('usuario', 'N/A')
+    logger.info(f"Usuário {update.effective_user.id} confirmou dados para automação QuickPlayer: {dados}")
+    resultado = await iniciar_automacao_quickplayer(dados['mac'], dados['m3u'])
+    if resultado:
+        await query.edit_message_text(
+            f"Automação QuickPlayer iniciada para {usuario_nome}! Playlist enviada para o MAC: {dados['mac']}")
+    else:
+        await query.edit_message_text(
+            f"Falha ao iniciar automação QuickPlayer para {usuario_nome}. Consulte o log para mais detalhes.")
+    # Oferece opção de voltar ao menu
+    keyboard = [[InlineKeyboardButton("Voltar ao menu", callback_data="voltar_menu")]]
+    await query.message.reply_text("O que deseja fazer agora?", reply_markup=InlineKeyboardMarkup(keyboard))
+    return 4
+
+# --- FIM QUICKPLAYER HANDLERS ---
 
 def main():
     # Deixar logs HTTP menos verbosos
@@ -238,10 +307,16 @@ def main():
             1: [MessageHandler(filters.TEXT & ~filters.COMMAND, receber_usuario)],
             2: [CallbackQueryHandler(confirmar_usuario, pattern="^(confirmar_usuario|cancelar_usuario)$")],
             3: [MessageHandler(filters.TEXT & ~filters.COMMAND, receber_senha)],
-            4: [CallbackQueryHandler(escolher_aplicativo, pattern="^(app_maxplayer|app_quickplayer|app_sair|voltar_menu|maxplayer_iniciar)$")],
+            4: [
+                CallbackQueryHandler(escolher_aplicativo, pattern="^(app_maxplayer|app_quickplayer|app_sair|voltar_menu|maxplayer_iniciar)$"),
+                CallbackQueryHandler(quickplayer_iniciar, pattern="^quickplayer_iniciar$")
+            ],
             11: [MessageHandler(filters.TEXT & ~filters.COMMAND, maxplayer_receber_login)],
             12: [MessageHandler(filters.TEXT & ~filters.COMMAND, maxplayer_receber_senha)],
             13: [CallbackQueryHandler(maxplayer_confirmar, pattern="^(maxplayer_confirmar|maxplayer_iniciar)$")],
+            21: [MessageHandler(filters.TEXT & ~filters.COMMAND, quickplayer_receber_mac), CallbackQueryHandler(escolher_aplicativo, pattern="^voltar_menu$")],
+            22: [MessageHandler(filters.TEXT & ~filters.COMMAND, quickplayer_receber_m3u), CallbackQueryHandler(quickplayer_iniciar, pattern="^quickplayer_iniciar$"), CallbackQueryHandler(escolher_aplicativo, pattern="^voltar_menu$")],
+            23: [CallbackQueryHandler(quickplayer_confirmar, pattern="^(quickplayer_confirmar|quickplayer_iniciar)$"), CallbackQueryHandler(escolher_aplicativo, pattern="^voltar_menu$")],
         },
         fallbacks=[CommandHandler("sair", sair)],
         allow_reentry=True
