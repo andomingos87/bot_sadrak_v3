@@ -135,8 +135,10 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
     elif escolha == "maxplayer_iniciar":
         logger.info(f"Usuário {update.effective_user.id} iniciou fluxo de coleta de dados para automação MaxPlayer.")
         context.user_data['maxplayer'] = {}
+        keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(
-            "Por favor, envie o nome do Usuario que deseja criar.")
+            "Por favor, envie o nome do Usuario, ou clique em voltar para retornar ao menu.", reply_markup=reply_markup)
         return 11
 
     elif escolha == "app_quickplayer":
@@ -202,8 +204,10 @@ async def maxplayer_receber_senha(update: Update, context: ContextTypes.DEFAULT_
     )
     keyboard = [
         [
-            InlineKeyboardButton("Confirmar", callback_data="maxplayer_confirmar"),
-            InlineKeyboardButton("Voltar", callback_data="maxplayer_iniciar")
+            InlineKeyboardButton("Confirmar", callback_data="maxplayer_confirmar")
+        ],
+        [
+            InlineKeyboardButton("Voltar ao menu", callback_data="voltar_menu")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -221,11 +225,13 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.edit_message_text("⏳ Executando automação do MaxPlayer. Por favor, aguarde...")
     resultado = await iniciar_automacao_maxplayer(usuario_nome, dados)
     if resultado:
-        await query.edit_message_text(
-            f"✅ Usuário criado com sucesso!\n\nRevenda: {usuario_nome}!\n\n Escolha o aplicativo que deseja acessar. Se você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\n MENU ATUALIZADO em {agora}")
+        await query.message.reply_text(
+            f"✅ Usuário criado com sucesso!\n\nRevenda: {usuario_nome}!\n\nEscolha o aplicativo que deseja acessar. Se você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\nMENU ATUALIZADO em {agora}"
+        )
     else:
-        await query.edit_message_text(
-            f"❌ Não foi possível criar o usuário no MaxPlayer para {usuario_nome}.\n\nPor favor, revise os dados e tente novamente. Se o problema persistir, peça suporte ao administrador.")
+        await query.message.reply_text(
+            f"❌ Não foi possível criar o usuário no MaxPlayer para {usuario_nome}.\n\nPor favor, revise os dados e tente novamente. Se o problema persistir, peça suporte ao administrador."
+        )
     keyboard = [[InlineKeyboardButton("🔙 Voltar ao menu", callback_data="voltar_menu")]]
     await query.message.reply_text("O que deseja fazer agora?", reply_markup=InlineKeyboardMarkup(keyboard))
     return 4
@@ -295,11 +301,11 @@ async def quickplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TY
     resultado = await iniciar_automacao_quickplayer(dados['mac'], dados['m3u'])
     agora = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     if resultado:
-        await query.edit_message_text(
-            f"✅ Lista enviada com sucesso!\n\n Revenda: {usuario_nome}!\n\nEscolha o aplicativo que deseja acessar.\nSe você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\nMENU ATUALIZADO em {agora}"
+        await query.message.reply_text(
+            f"✅ Lista enviada com sucesso!\n\nRevenda: {usuario_nome}!\n\nEscolha o aplicativo que deseja acessar.\nSe você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\nMENU ATUALIZADO em {agora}"
         )
     else:
-        await query.edit_message_text(
+        await query.message.reply_text(
             f"❌ Não foi possível cadastrar a playlist para o MAC: {dados['mac']}.\n\nRevise os dados e tente novamente. Se o erro persistir, solicite suporte ao administrador."
         )
     keyboard = [[InlineKeyboardButton("🔙 Voltar ao menu", callback_data="voltar_menu")]]
@@ -324,7 +330,10 @@ def main():
                 CallbackQueryHandler(escolher_aplicativo, pattern="^(app_maxplayer|app_quickplayer|app_sair|voltar_menu|maxplayer_iniciar)$"),
                 CallbackQueryHandler(quickplayer_iniciar, pattern="^quickplayer_iniciar$")
             ],
-            11: [MessageHandler(filters.TEXT & ~filters.COMMAND, maxplayer_receber_login)],
+            11: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, maxplayer_receber_login),
+                CallbackQueryHandler(escolher_aplicativo, pattern="^voltar_menu$")
+            ],
             12: [MessageHandler(filters.TEXT & ~filters.COMMAND, maxplayer_receber_senha)],
             13: [CallbackQueryHandler(maxplayer_confirmar, pattern="^(maxplayer_confirmar|maxplayer_iniciar)$")],
             21: [MessageHandler(filters.TEXT & ~filters.COMMAND, quickplayer_receber_mac), CallbackQueryHandler(escolher_aplicativo, pattern="^voltar_menu$")],
