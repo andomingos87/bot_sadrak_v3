@@ -147,14 +147,9 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         keyboard = [[InlineKeyboardButton("Voltar", callback_data="voltar_menu")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         mensagem = (
-            "🚀 Você escolheu o app QuickPlayer.\n\n"
+            "🚀 Você escolheu o app QuickPlayer.\n\nDigite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):"
         )
         await query.edit_message_text(mensagem, reply_markup=reply_markup)
-        # Já solicita o MAC Address em seguida
-        await query.message.reply_text(
-            "Digite o número do MAC Address (Exemplo: XX:XX:XX:XX:XX:XX):",
-            #reply_markup=reply_markup
-        )
         context.user_data['quickplayer'] = {}
         return 21
     elif escolha == "voltar_menu":
@@ -225,8 +220,9 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.edit_message_text("⏳ Executando automação do MaxPlayer. Por favor, aguarde...")
     resultado = await iniciar_automacao_maxplayer(usuario_nome, dados)
     if resultado:
+        await query.message.reply_text("✅ Usuário criado com sucesso!")
         await query.message.reply_text(
-            f"✅ Usuário criado com sucesso!\n\nRevenda: {usuario_nome}!\n\nEscolha o aplicativo que deseja acessar. Se você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\nMENU ATUALIZADO em {agora}"
+            f"Revenda: {usuario_nome}!\n\nEscolha o aplicativo que deseja acessar. Se você está tendo problemas, mande /sair e faça /entrar novamente!\nNão envie mensagens com o menu aberto.\n\nMENU ATUALIZADO em {agora}"
         )
     else:
         await query.message.reply_text(
@@ -308,8 +304,8 @@ async def quickplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TY
         await query.message.reply_text(
             f"❌ Não foi possível cadastrar a playlist para o MAC: {dados['mac']}.\n\nRevise os dados e tente novamente. Se o erro persistir, solicite suporte ao administrador."
         )
-    keyboard = [[InlineKeyboardButton("🔙 Voltar ao menu", callback_data="voltar_menu")]]
-    await query.message.reply_text("O que deseja fazer agora?", reply_markup=InlineKeyboardMarkup(keyboard))
+    keyboard = [[InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer"), InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer")]]
+    await query.message.reply_text("Escolha o aplicativo", reply_markup=InlineKeyboardMarkup(keyboard))
     return 4
 
 def main():
