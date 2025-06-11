@@ -6,6 +6,6 @@
 
 [ ]tirar o botão de iniciar automação, está bem ruim.
 
-[ ] Depois que digito /sair o bnot mostra a mensgem de saída normal, mas se eu digito qualquer coisa ele recebe como login e pede uma senha.![alt text]({BF8A4FDF-51F0-439A-B31B-821E4675D81D}.png)
+[ ] Depois que digito /sair o bot mostra a mensgem de saída normal, mas se eu digito qualquer coisa ele recebe como login e pede uma senha.!
 
 [ ] Remover a funcionalidade de gravação de video, manter os delays entre ações

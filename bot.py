@@ -122,8 +122,8 @@ async def escolher_aplicativo(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.info(f"Usuário {update.effective_user.id} entrou na automação do MaxPlayer.")
         keyboard = [
             [
-                InlineKeyboardButton("Iniciar Automação", callback_data="maxplayer_iniciar"),
-                InlineKeyboardButton("Voltar ao menu de aplicativos", callback_data="voltar_menu")
+                InlineKeyboardButton("Criar usuário", callback_data="maxplayer_iniciar"),
+                InlineKeyboardButton("Voltar ao menu", callback_data="voltar_menu")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -232,8 +232,8 @@ async def maxplayer_confirmar(update: Update, context: ContextTypes.DEFAULT_TYPE
         await query.message.reply_text(
             f"❌ Não foi possível criar o usuário no MaxPlayer para {usuario_nome}.\n\nPor favor, revise os dados e tente novamente. Se o problema persistir, peça suporte ao administrador."
         )
-    keyboard = [[InlineKeyboardButton("🔙 Voltar ao menu", callback_data="voltar_menu")]]
-    await query.message.reply_text("O que deseja fazer agora?", reply_markup=InlineKeyboardMarkup(keyboard))
+    keyboard = [[InlineKeyboardButton("MaxPlayer", callback_data="app_maxplayer"), InlineKeyboardButton("QuickPlayer", callback_data="app_quickplayer")]]
+    await query.message.reply_text("Escolha o aplicativo", reply_markup=InlineKeyboardMarkup(keyboard))
     return 4
 
 # --- QUICKPLAYER HANDLERS ---
