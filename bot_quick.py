@@ -45,17 +45,10 @@ async def iniciar_automacao_quickplayer(mac, m3u_url):
     logging.info(f"[QuickPlayer] URL M3U adaptada: {url_alterada}")
     browser = None
     try:
-        import os
-        from datetime import datetime
-        videos_dir = os.path.join(os.path.dirname(__file__), 'videos')
-        os.makedirs(videos_dir, exist_ok=True)
         async with async_playwright() as p:
-            # headless=False para depuração visual
-            browser = await p.chromium.launch(headless=False)
-            # Nome do vídeo inclui MAC e timestamp
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            video_name = f'quickplayer_{mac.replace(":","")}_{timestamp}'
-            context = await browser.new_context(record_video_dir=videos_dir)
+            # headless=True para execução em servidores (sem interface gráfica)
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context()
             page = await context.new_page()
             logging.info("[QuickPlayer] Acessando painel QuickPlayer...")
             await page.goto("https://quickplayer.app/#/upload-playlist", timeout=40000)
